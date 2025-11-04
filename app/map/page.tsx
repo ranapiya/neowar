@@ -60,20 +60,22 @@ export default function MapPage() {
   }
 
   return (
-    <div className="relative min-h-screen w-full overflow-hidden bg-background">
-      {/* Grid background */}
-      <div className="absolute inset-0">
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(100,220,255,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(100,220,255,0.08)_1px,transparent_1px)] bg-[size:40px_40px]"></div>
-
-        {/* Radial glow from center */}
-        <div className="absolute inset-0 bg-radial-gradient opacity-30"></div>
-      </div>
+   <div
+  className="relative min-h-screen w-full overflow-hidden bg-background"
+  style={{
+    backgroundImage: "url('/mp1.png')", // ← replace with your image path
+    
+    
+  }}
+>
+  {/* Semi-transparent overlay for better contrast */}
+  
 
       {/* HUD Top Bar */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="absolute top-0 left-0 right-0 z-20 border-b border-cyan-500/30 bg-background/80 backdrop-blur-sm"
+        className="absolute top-0 left-0 right-0 z-20 border-b border-cyan-500/30 "
       >
         <div className="flex items-center justify-between px-6 py-4">
           <div className="flex items-center gap-6">
@@ -182,7 +184,7 @@ export default function MapPage() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="absolute bottom-0 left-0 right-0 z-20 border-t border-cyan-500/30 bg-background/80 backdrop-blur-sm"
+        className="absolute bottom-0 left-0 right-0 z-20 "
       >
         <div className="flex items-center justify-between px-6 py-4">
           <Link href="/">

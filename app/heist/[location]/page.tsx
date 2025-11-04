@@ -307,19 +307,19 @@ export default function HeistPage() {
                 animate={{ scale: [1, 1.1, 1] }}
                 transition={{ duration: 0.6 }}
               >
-                MISSION SUCCESS
+                INFILTRATION PLAN SUCCESS
               </motion.h2>
               <p className="text-gray-300 mb-6">Target acquired. Extraction complete.</p>
               <div className="bg-slate-800/50 rounded p-4 mb-6 border border-green-500/30">
-                <p className="text-sm text-gray-400">Credits Earned</p>
-                <p className="text-3xl font-bold text-green-400">{credits} cr.</p>
+                <p className="text-sm text-gray-400">Credits Agent will  Earned</p>
+                <p className="text-3xl font-bold text-green-400">1 million.</p>
               </div>
-              <Link href="/map">
+              <Link href="/heist/tokyo">
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   className="w-full px-6 py-3 bg-gradient-to-r from-cyan-600 to-purple-600 rounded font-bold hover:shadow-lg hover:shadow-cyan-500/50 transition-all"
                 >
-                  RETURN TO BASE
+                  START MISSION
                 </motion.button>
               </Link>
             </motion.div>
