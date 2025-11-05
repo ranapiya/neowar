@@ -4,6 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { motion } from "framer-motion"
 import { Crosshair, Home, User, MapPin } from "lucide-react"
+import Header from "@/components/neowar/header"
 
 const LOCATIONS = [
   {
@@ -68,6 +69,7 @@ export default function MapPage() {
     
   }}
 >
+  <Header/>
   {/* Semi-transparent overlay for better contrast */}
   
 
@@ -77,7 +79,7 @@ export default function MapPage() {
         animate={{ opacity: 1, y: 0 }}
         className="absolute top-0 left-0 right-0 z-20 border-b border-cyan-500/30 "
       >
-        <div className="flex items-center justify-between px-6 py-4">
+        <div className="flex items-center justify-between px-6 py-4 mt-16">
           <div className="flex items-center gap-6">
             <div className="flex flex-col">
               <p className="text-xs text-gray-500">AGENT NAME</p>
@@ -170,7 +172,7 @@ export default function MapPage() {
             animate={{
               backgroundPosition: ["0% 0%", "0% 100%"],
             }}
-            transition={{ duration: 4, repeat: Number.POSITIVE_INFINITY, linear: true }}
+            transition={{ duration: 4, repeat: Number.POSITIVE_INFINITY,}}
             style={{
               background:
                 "linear-gradient(180deg, rgba(100,220,255,0.1) 0%, transparent 50%, rgba(100,220,255,0.1) 100%)",

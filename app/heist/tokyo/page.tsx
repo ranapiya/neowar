@@ -1,121 +1,18 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import { neoTokyoPuzzles } from "@/lib/geminiT"; // ✅ your puzzle file
+import Link from "next/link";
+import { X } from "lucide-react";
 import Image from "next/image";
+import Header from "@/components/neowar/header";
 
-/**
- * Game Heist — Split UI (Mission Briefing left, Command Center right)
- * - MCQ puzzles (5 levels)
- * - Global timer
- * - IGRIS (fake-AI) mission log
- * - Neon gradients + grid background
- * - Confetti canvas on success
- *
- * Drop into: app/game-heist/page.tsx
- */
-
-const TOTAL_TIME = 120; // total time in seconds
-
-const puzzles = [
-  {
-    id: 1,
-    title: "LEVEL 1",
-    question:
-      "A lock requires a 3-digit code. Clue: Sum of digits = 9, and all are different odd numbers.",
-    options: ["135", "279", "531", "753"],
-    answer: "135",
-    difficulty: "Medium",
-    reward: "10,000 cr.",
-  },
-  {
-    id: 2,
-    title: "LEVEL 2",
-    question:
-      "You see me once in a minute, twice in a moment, but never in a thousand years.",
-    options: ["The letter M", "Time", "Shadow", "Memory"],
-    answer: "The letter M",
-    difficulty: "Medium",
-    reward: "9,000 cr.",
-  },
-  {
-    id: 3,
-    title: "LEVEL 3",
-    question: "Agent Cipher left: 8-5-9-19-20. Decode it.",
-    options: ["HEIST", "AGENT", "ALERT", "CODES"],
-    answer: "HEIST",
-    difficulty: "Medium",
-    reward: "11,000 cr.",
-  },
-  {
-    id: 4,
-    title: "LEVEL 4",
-    question:
-      "7 spies sit in a circle. Every 2nd spy is eliminated until 1 remains. Who survives?",
-    options: ["Spy 3", "Spy 7", "Spy 5", "Spy 1"],
-    answer: "Spy 7",
-    difficulty: "Hard",
-    reward: "15,000 cr.",
-  },
-  {
-    id: 5,
-    title: "LEVEL 5",
-    question:
-      "Final lock: The key is the total number of correct answers multiplied by 2. Choose the key.",
-    options: ["8", "6", "10", "12"],
-    answer: "10",
-    difficulty: "Hard",
-    reward: "20,000 cr.",
-  },
-];
-
-// Simple confetti (canvas) function
-function startConfetti(canvas: HTMLCanvasElement | null) {
-  if (!canvas) return;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return;
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-  const W = canvas.width;
-  const H = canvas.height;
-
-  const pieces = Array.from({ length: 160 }, () => ({
-    x: Math.random() * W,
-    y: Math.random() * H - H,
-    r: Math.random() * 6 + 4,
-    d: Math.random() * 3 + 2,
-    color: ["#7ef9ff", "#d084ff", "#ff6b6b", "#ffd166", "#9dffb0"][
-      Math.floor(Math.random() * 5)
-    ],
-    tilt: Math.random() * 10 - 5,
-  }));
-
-  let raf = 0;
-  function draw() {
-    ctx.clearRect(0, 0, W, H);
-    for (let i = 0; i < pieces.length; i++) {
-      const p = pieces[i];
-      ctx.beginPath();
-      ctx.fillStyle = p.color;
-      ctx.moveTo(p.x, p.y);
-      ctx.ellipse(p.x, p.y, p.r, p.r * 0.6, p.tilt, 0, Math.PI * 2);
-      ctx.fill();
-      p.y += p.d;
-      p.x += Math.sin(p.y * 0.01) * 1.5;
-      p.tilt += 0.05;
-      if (p.y > H + 20) {
-        p.y = -20;
-        p.x = Math.random() * W;
-      }
-    }
-    raf = requestAnimationFrame(draw);
-  }
-  draw();
-  return () => cancelAnimationFrame(raf);
-}
+const TOTAL_TIME = 120; // seconds
 
 export default function GameHeist() {
   const [started, setStarted] = useState(false);
-  const [currentStep, setCurrentStep] = useState(0); // 0..4
+  const [currentStep, setCurrentStep] = useState(0);
   const [selected, setSelected] = useState<string | null>(null);
   const [timeLeft, setTimeLeft] = useState(TOTAL_TIME);
   const [failed, setFailed] = useState(false);
@@ -123,60 +20,84 @@ export default function GameHeist() {
   const [messages, setMessages] = useState<
     { sender: "ai" | "system" | "user"; text: string; timestamp?: string }[]
   >([]);
-  const confettiRef = useRef<HTMLCanvasElement | null>(null);
-  const confettiStopRef = useRef<() => void | null>(null);
+  const [puzzles, setPuzzles] = useState(() =>
+    shuffleArray(neoTokyoPuzzles).slice(0, 5)
+  ); // random 5 each run
 
   const currentPuzzle = puzzles[currentStep];
 
-  // Start / Enter support (Enter key starts the mission)
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Enter") {
-        if (!started) startMission();
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [started]);
+  // Shuffle Helper
+  function shuffleArray<T>(arr: T[]): T[] {
+    return [...arr].sort(() => Math.random() - 0.5);
+  }
 
-  // Timer
+  // Mission Start / Restart
+  function startMission() {
+    setStarted(true);
+    setFailed(false);
+    setSuccess(false);
+    setSelected(null);
+    setTimeLeft(TOTAL_TIME);
+    setMessages([]);
+    setCurrentStep(0);
+    setPuzzles(shuffleArray(neoTokyoPuzzles).slice(0, 5)); // 🔀 new random set
+    pushAiMessage("...IGRIS SYSTEM BOOTING... Deploying SECTOR 1");
+    setTimeout(() => {
+      pushAiMessage(
+        `// SECTOR 1 READY — ${currentPuzzle.difficulty} — Reward: ${currentPuzzle.reward}`
+      );
+    }, 600);
+  }
+
+  // Handle Answer
+  function handleSelect(option: string) {
+    if (!started || failed || success || selected) return;
+    setSelected(option);
+    pushUserMessage(`> SELECTED: ${option}`);
+
+    if (option === currentPuzzle.answer) {
+      // ✅ Correct — Move ahead
+      pushAiMessage("ACCESS GRANTED — Proceeding to next SECTOR...");
+      setTimeout(() => {
+        if (currentStep + 1 >= puzzles.length) {
+          setSuccess(true);
+          pushAiMessage("✅ ALL SECTORS CLEARED — MISSION COMPLETE.");
+        } else {
+          const next = currentStep + 1;
+          setCurrentStep(next);
+          setSelected(null);
+          pushAiMessage(
+            `// SECTOR ${next + 1} READY — ${puzzles[next].difficulty} — Reward: ${puzzles[next].reward}`
+          );
+        }
+      }, 900);
+    } else {
+      // ❌ Wrong — Fail mission, wait for user to restart manually
+      pushAiMessage(
+        "🚨 ALERT — IGRIS detected infiltration attempt. Alarms raised. Mission compromised."
+      );
+      setFailed(true);
+    }
+  }
+
+  // Timer logic
   useEffect(() => {
     if (!started || success || failed) return;
-    const t = setInterval(() => {
+    const timer = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
-          clearInterval(t);
+          clearInterval(timer);
           setFailed(true);
-          pushSystemMessage("⛔ TIMER — Mission compromised: time expired.");
+          pushSystemMessage("⛔ TIME EXPIRED — Mission Failed.");
           return 0;
         }
         return prev - 1;
       });
     }, 1000);
-    return () => clearInterval(t);
+    return () => clearInterval(timer);
   }, [started, success, failed]);
 
-  // start the mission
-  function startMission() {
-    setStarted(true);
-    setCurrentStep(0);
-    setSelected(null);
-    setTimeLeft(TOTAL_TIME);
-    setFailed(false);
-    setSuccess(false);
-    setMessages([]);
-    pushAiMessage(
-      `... IGRIS initializing MISSION INTERFACE... Boot sequence complete. Deploying SECTOR 1.`
-    );
-    // show a short deploy sequence
-    setTimeout(() => {
-      pushAiMessage(
-        `// SECTOR 1 READY — ${currentPuzzle.difficulty} — Reward: ${currentPuzzle.reward}`
-      );
-    }, 700);
-  }
-
+  // Message helpers
   function pushAiMessage(text: string) {
     const ts = new Date().toLocaleTimeString();
     setMessages((prev) => [...prev, { sender: "ai", text, timestamp: ts }]);
@@ -190,49 +111,7 @@ export default function GameHeist() {
     setMessages((prev) => [...prev, { sender: "user", text, timestamp: ts }]);
   }
 
-  // handle answer selection
-  function handleSelect(option: string) {
-    if (selected || failed || success) return; // prevent repeated selection until next state
-    setSelected(option);
-    pushUserMessage(`> SELECTED: ${option}`);
-    if (option === currentPuzzle.answer) {
-      pushAiMessage("ACCESS GRANTED — Valid key detected. Lock bypassing...");
-      // next step
-      setTimeout(() => {
-        if (currentStep + 1 >= puzzles.length) {
-          setSuccess(true);
-          pushAiMessage("✅ ALL SECTORS CLEARED — Initiating escape protocol.");
-          // start confetti
-          
-        } else {
-          const next = currentStep + 1;
-          setCurrentStep(next);
-          setSelected(null);
-          pushAiMessage(`Initializing SECTOR ${next + 1}...`);
-          setTimeout(() => {
-            pushAiMessage(
-              `// SECTOR ${next + 1} READY — ${puzzles[next].difficulty} — Reward: ${puzzles[next].reward}`
-            );
-          }, 400);
-        }
-      }, 900);
-    } else {
-      pushAiMessage("ERROR: INVALID KEY. Try again.");
-      // allow retries but don't advance
-      setTimeout(() => {
-        setSelected(null);
-      }, 900);
-    }
-  }
-
-  // Cleanup confetti on unmount or restart
-  useEffect(() => {
-    return () => {
-      if (confettiStopRef.current) confettiStopRef.current();
-    };
-  }, []);
-
-  // simple helpers
+  // Time format helper
   const formatTime = (s: number) => {
     const m = Math.floor(s / 60)
       .toString()
@@ -242,7 +121,15 @@ export default function GameHeist() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-black text-white font-sans">
+    
+    <div className="min-h-screen w-full bg-black text-white font-sans"
+    style={{
+    backgroundImage: "url('/2.png')", // ← replace with your image path
+    
+    
+  }}
+>
+  <Header/>
       {/* Grid background overlay */}
       <div className="absolute inset-0 pointer-events-none z-0">
         <div className="w-full h-full bg-[radial-gradient(ellipse_at_top_right,_rgba(60,13,99,0.2),_transparent_30%),linear-gradient(180deg,#000000,rgba(10,10,10,0.6))]" />
@@ -251,20 +138,17 @@ export default function GameHeist() {
             backgroundImage:
               "linear-gradient(0deg, rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px)",
             backgroundSize: "60px 60px, 60px 60px",
+          
           }}
           className="absolute inset-0 opacity-20"
         />
       </div>
 
-      {/* Confetti canvas */}
-      <canvas
-        ref={confettiRef}
-        className="absolute inset-0 w-full h-full z-30 pointer-events-none"
-      />
+      
 
-      <div className="relative z-10 max-w-[1400px] mx-auto px-6 py-8">
+      <div className="relative z-10 max-w-[1400px] mx-auto px-6 py-8 mt-16">
         {/* Header */}
-        <header className="flex items-center justify-between mb-6">
+        <header className="flex items-center justify-between mb-6 ">
           <div>
             <h1 className="text-4xl font-extrabold">
               <span className="text-cyan-400">Neo-</span>
@@ -283,16 +167,14 @@ export default function GameHeist() {
             <div className="px-3 py-2 rounded-md border border-cyan-600 text-xs text-cyan-200">
               {started ? `TIME: ${formatTime(timeLeft)}` : "TIMER: --:--"}
             </div>
-            <button
-              onClick={() => {
-                // small exit / abort: reload page
-                if (confirm("Abort mission and return to menu?")) window.location.reload();
-              }}
-              className="w-10 h-10 rounded-md border border-cyan-500 text-cyan-300 flex items-center justify-center"
-              title="Close"
+            <Link href="/map">
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              className="p-2 border border-cyan-500/50 rounded hover:bg-cyan-500/10 transition-colors"
             >
-              ✕
-            </button>
+              <X className="w-6 h-6 text-cyan-400" />
+            </motion.button>
+          </Link>
           </div>
         </header>
 
@@ -453,21 +335,21 @@ export default function GameHeist() {
                       pushSystemMessage("EXECUTE: Plan already in progress.");
                     }
                   }}
-                  className="w-full px-4 py-3 rounded-lg text-sm font-semibold bg-gradient-to-r from-cyan-500 to-purple-500 text-black shadow-md"
+                  className="w-full px-4 py-3 rounded-lg text-sm font-semibold bg-gradient-to-r from-cyan-500 to-purple-500 text-black shadow-md cursor-pointer transform transition-transform duration-300 ease-in-out hover:scale-105"
                 >
-                  ⚡ EXECUTE PLAN
+                  ⚡BREACH IGRIS AI
                 </button>
 
                 <button
                   onClick={() => pushSystemMessage("DEPLOY DRONE: Systems offline (locked).")}
-                  className="w-full px-4 py-3 rounded-lg text-sm border border-cyan-800 text-cyan-200 disabled:opacity-50"
+                  className="w-full px-4 py-3 rounded-lg text-sm border border-cyan-800 text-cyan-200 disabled:opacity-50 cursor-pointer transform transition-transform duration-300 ease-in-out hover:scale-105"
                 >
                   🔒 DEPLOY DRONE
                 </button>
 
                 <button
                   onClick={() => pushSystemMessage("HACK SYSTEM: Access level insufficient (locked).")}
-                  className="w-full px-4 py-3 rounded-lg text-sm border border-cyan-800 text-cyan-200"
+                  className="w-full px-4 py-3 rounded-lg text-sm border border-cyan-800 text-cyan-200 cursor-pointer transform transition-transform duration-300 ease-in-out hover:scale-105"
                 >
                   🔒 HACK SYSTEM
                 </button>
@@ -476,7 +358,7 @@ export default function GameHeist() {
                   onClick={() => {
                     if (confirm("Abort mission? This will reset progress.")) window.location.reload();
                   }}
-                  className="w-full px-4 py-3 rounded-lg text-sm font-semibold border border-red-600 text-red-400 bg-transparent"
+                  className="w-full px-4 py-3 rounded-lg  text-sm font-semibold border  border-red-600 text-red-400 bg-transparent cursor-pointer transform transition-transform duration-300 ease-in-out hover:scale-105 hover:bg-red-700 hover:text-black"
                 >
                   ⛔ ABORT MISSION
                 </button>
@@ -531,7 +413,6 @@ export default function GameHeist() {
               <button
                 onClick={() => {
                   // stop confetti and restart
-                  if (confettiStopRef.current) confettiStopRef.current();
                   setSuccess(false);
                   startMission();
                 }}

@@ -3,25 +3,33 @@ import type { Metadata } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import "./globals.css"
-
-const _geist = Geist({ subsets: ["latin"] })
-const _geistMono = Geist_Mono({ subsets: ["latin"] })
+import { headers } from 'next/headers' // added
+import ContextProvider from '@/context'
 
 export const metadata: Metadata = {
-  title: "Echo Heist - Enter the Loop",
+  title: "NeoWar - THE AI UPRISING",
   description: "Futuristic heist game with interactive world",
-  generator: "v0.app",
+   icons: {
+    icon: "/logo.png", // 🔹 your logo URL here
+    
+  },
+  
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+
+const headersObj = await headers();
+  const cookies = headersObj.get('cookie')
+
   return (
     <html lang="en" className="dark">
       <body className={`font-sans antialiased bg-background text-foreground`}>
-        {children}
+        
+      <ContextProvider cookies={cookies}>{children}</ContextProvider>
         <Analytics />
       </body>
     </html>

@@ -5,6 +5,7 @@ import Link from "next/link"
 import { motion } from "framer-motion"
 import { Activity, AlertCircle, Zap, Lock, X } from "lucide-react"
 import { useParams } from "next/navigation"
+import Header from "@/components/neowar/header"
 
 const HEIST_DATA: Record<string, any> = {
   "neo-tokyo": {
@@ -12,9 +13,20 @@ const HEIST_DATA: Record<string, any> = {
     target: "Yakuza International Bank",
     difficulty: "Expert",
     rewards: "50,000",
-    image: "/cyber-city-neon-tokyo-skyline.jpg",
+    image: "/cyber-city-neon-tokyo-skyline.jpg", // Background Image
     briefing:
       "Infiltrate the most advanced security system in the Pacific. The vault contains encrypted data worth a fortune. Be stealthy—alarms mean instant lockdown.",
+    route: "/heist/tokyo",
+  },
+  "crimson-dunes": {
+    name: "Crimson Dunes Raid",
+    target: "Desert Outpost",
+    difficulty: "Medium",
+    rewards: "30,000",
+    image: "/desert-sand-dunes-red-sunset.jpg", // Background Image
+    briefing:
+      "A remote outpost in the Sahara holds rare gems. Limited guards and predictable patrol patterns make this an ideal entry point.",
+    route: "/heist/dunes",
   },
   frostspire: {
     name: "Frostspire Expedition",
@@ -24,15 +36,7 @@ const HEIST_DATA: Record<string, any> = {
     image: "/arctic-ice-palace-frozen-vault.jpg",
     briefing:
       "The research facility lies in the harshest climate on Earth. Extreme temperatures and automated defenses protect priceless artifacts.",
-  },
-  "crimson-dunes": {
-    name: "Crimson Dunes Raid",
-    target: "Desert Outpost",
-    difficulty: "Medium",
-    rewards: "30,000",
-    image: "/desert-sand-dunes-red-sunset.jpg",
-    briefing:
-      "A remote outpost in the Sahara holds rare gems. Limited guards and predictable patrol patterns make this an ideal entry point.",
+    route: "/heist/frostspire",
   },
   "solace-bay": {
     name: "Solace Bay Infiltration",
@@ -42,9 +46,9 @@ const HEIST_DATA: Record<string, any> = {
     image: "/futuristic-ocean-platform-floating-city.jpg",
     briefing:
       "A high-tech floating facility over international waters. Neutralize security and extract the target before naval reinforcements arrive.",
+    route: "/heist/solace",
   },
 }
-
 export default function HeistPage() {
   const params = useParams()
   const location = params?.location as string
@@ -82,6 +86,7 @@ export default function HeistPage() {
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-background">
+      <Header/>
       {/* Grid background */}
       <div className="absolute inset-0">
         <div className="absolute inset-0 bg-[linear-gradient(rgba(100,220,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(100,220,255,0.05)_1px,transparent_1px)] bg-[size:40px_40px]"></div>
@@ -94,7 +99,7 @@ export default function HeistPage() {
         animate={{ opacity: 1 }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-8 mt-16">
           <motion.div initial={{ x: -20 }} animate={{ x: 0 }}>
             <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-500">
               {heistInfo.name}
@@ -314,14 +319,14 @@ export default function HeistPage() {
                 <p className="text-sm text-gray-400">Credits Agent will  Earned</p>
                 <p className="text-3xl font-bold text-green-400">1 million.</p>
               </div>
-              <Link href="/heist/tokyo">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  className="w-full px-6 py-3 bg-gradient-to-r from-cyan-600 to-purple-600 rounded font-bold hover:shadow-lg hover:shadow-cyan-500/50 transition-all"
-                >
-                  START MISSION
-                </motion.button>
-              </Link>
+              <Link href={heistInfo.route}>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            className="mt-10 px-8 py-3 bg-gradient-to-r from-cyan-600 to-purple-600 rounded-lg font-semibold text-lg hover:shadow-lg hover:shadow-cyan-500/50 transition-all"
+          >
+            START MISSION
+          </motion.button>
+        </Link>
             </motion.div>
           </motion.div>
         )}
