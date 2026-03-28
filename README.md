@@ -3,6 +3,7 @@
 **NeoWar** is a futuristic, immersive heist game set in a cyberpunk Neo Tokyo world. Players must solve puzzles, decrypt codes, and complete missions under time pressure. Integrated with AI-driven mission logs (IGRIS) and interactive UI, NeoWar combines Web2 and Web3 elements for a modern gaming experience.
 
 ---
+<img width="1918" height="907" alt="Screenshot 2026-03-28 203935" src="https://github.com/user-attachments/assets/3df37ca6-8935-409b-ae5f-56af9cedb761" />
 
 ## 🕹️ Features
 
